@@ -541,7 +541,8 @@ void cMSG::Clear(void)
                  fLocal      = fHold    = fFileRequest = fRRQ      =
                  fIRR        = fARQ     = fFURQ        = fDIR      =
                  fIMM        = fCFM     = fTFS         = fKFS      =
-                 fEchomail   = fScanned = fLok         = fAS       = 0;
+                 fEchomail   = fScanned = fLok         = fAS       =
+                 fNotUsed    = 0;
     CHP = 315026;
     _Klu.Clear();
     CHP = 315028;
@@ -1665,6 +1666,7 @@ cMSG & cMSG::operator =(const cMSG & m)
     fKillSent    = m.fKillSent;
     fLocal       = m.fLocal;
     fHold        = m.fHold;
+    fNotUsed     = m.fNotUsed;
     fFileRequest = m.fFileRequest;
     fRRQ     = m.fRRQ;
     fIRR     = m.fIRR;
