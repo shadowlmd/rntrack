@@ -1,50 +1,50 @@
-# $Id$
-#
-# Makefile for Building SMAPI with cross-compiler Mingw32
-# No support for the Husky build environment.
+# Legacy makefile for building with MinGW
+# It is included from MakeFiles/mingw32/Makefile
 
-CC	= gcc
-LIB	= ar
-
-RANLIB	= ranlib
-ifeq ($(TERM),msys)
-RM	= rm
+ifeq ($(DEBUG),0)
+    smapi_CFLAGS := -O3 -Wall -funsigned-char -I$(smapi_HDIR)
 else
-RM	= del
+    smapi_CFLAGS := -g -O2 -Wall -funsigned-char -I$(smapi_HDIR)
 endif
 
-OBJ	= .o
-EXE	=.exe
+smapi_CC := gcc
+smapi_CDEFS :=
+OBJ := .o
 
-# __MINGW32__ is predefined macros, __NT__ defined in compiler.h
-# use __MINGW32__ in source code please (if possible)
-CDEFS=
+smapi_OBJS := api_jam$(OBJ) \
+          api_sdm$(OBJ) \
+          date2bin$(OBJ) \
+          dosdate$(OBJ) \
+          fexist$(OBJ) \
+          ffind$(OBJ) \
+          flush$(OBJ) \
+          ftnaddr$(OBJ) \
+          genmsgid$(OBJ) \
+          locking$(OBJ) \
+          memory$(OBJ) \
+          months$(OBJ) \
+          msgapi$(OBJ) \
+          parsenn$(OBJ) \
+          patmat$(OBJ) \
+          qksort$(OBJ) \
+          setfsize$(OBJ) \
+          sq_area$(OBJ) \
+          sq_hash$(OBJ) \
+          sq_help$(OBJ) \
+          sq_idx$(OBJ) \
+          sq_kill$(OBJ) \
+          sq_lock$(OBJ) \
+          sq_misc$(OBJ) \
+          sq_msg$(OBJ) \
+          sq_read$(OBJ) \
+          sq_uid$(OBJ) \
+          sq_write$(OBJ) \
+          strext$(OBJ) \
+          strftim$(OBJ) \
+          structrw$(OBJ) \
+          tdelay$(OBJ) \
+          trail$(OBJ) \
+          weekday$(OBJ)
 
-CFLAGS=-Wall -c
-COPT=-O3
-
-default: all
-
-TARGET=libsmapimgw.a
-
-include makefile.inc
-
-
-all: $(TARGET) gnmsgid.exe
-
-.c$(OBJ):
-	$(CC) $(CFLAGS) $(CDEFS) $(COPT) $<
-	$(LIB) r $(TARGET) $@
-
-$(TARGET): $(OBJS)
-	$(RANLIB) $(TARGET)
-
-gnmsgid$(EXE): $(OBJS)
-	$(CC) -Wall $(CDEFS) $(COPT) gnmsgid.c -o$@ $(MGOBJS) $(TARGET)
-
-clean:
-	-$(RM) *$(OBJ)
-
-distclean: clean
-	-$(RM) $(TARGET)
-	-$(RM) gnmsgid$(EXE)
+$(smapi_OBJS): %.o: $(smapi_SRCDIR)/%.c
+	$(smapi_CC) $(smapi_CFLAGS) $(smapi_CDEFS) -c $(smapi_SRCDIR)/$*.c

@@ -1,47 +1,75 @@
-# $Id$
-CC		= g++
-CFLAGS	=  -mno-cygwin -Wall -W -fno-rtti -fno-strict-aliasing -I../../hpp -I../../src -I../../smapi/h -I../../smapi/src -O1
-CDEFS	= -D__NT__ -DNDEBUG -DWIN32 -DWIN32IOP_H -DHAVE_IO_H \
-		  -DHAVE_TIME_H -DHAVE_UTIME_H -DHAVE_LOCALE_H
-SMAPIDIR= ../../smapi
-LFLAGS	= -s -L$(SMAPIDIR)smapi -lsmapimgw
-SRCDIR	= ../../src/
-SRCDIR1 = ..\\..\\src\\
-EXEEND	= _w32.exe
-ifeq ($(TERM),msys)
-RM	= rm
-else
-RM	= del /Q
-endif
-#CONFIG = c:\\\\ftn\\\\rntrack.cfg
+#
+# Makefile for building RNTrack with MinGW
+#
+# Build options:
+# ENABLE_SCRIPTS=1
+#    Build with embedded Perl
+# ENABLE_SYSLOG_LOG_FORMAT=1
+#    Write log file lines like syslog(3)
+# ENABLE_LOG_PID=1
+#    Write the Process ID number into log file lines.
+# CONFIG=c:\\\\ftn\\\\rntrack.cfg
+#    Alternate config file location
+# DEBUG=1
+#    Build a debug version of the executable
+#
+# If the shell is MSYS sh, set TERM=msys before running make.
+# For cross-compiling, override the compilers, for example:
+#    make CC=i686-w64-mingw32-g++ smapi_CC=i686-w64-mingw32-gcc
 
-# uncomment or use in comand line to enable features: 
-# Embedded Perl
-#ENABLE_SCRIPTS=1
-# Write PID/TID in log lines
-#ENABLE_LOG_PID=1
-# Use log lines format like syslog format
-#ENABLE_SYSLOG_LOG_FORMAT=1
+DEBUG ?= 0
+ENABLE_SCRIPTS ?= 0
+ENABLE_LOG_PID ?= 0
+ENABLE_SYSLOG_LOG_FORMAT ?= 0
+
+ROOTDIR := ../..
+HPPDIR := $(ROOTDIR)/hpp
+SRCDIR := $(ROOTDIR)/src
+SMAPIDIR := $(ROOTDIR)/smapi
+smapi_HDIR := $(SMAPIDIR)/h
+smapi_SRCDIR := $(SMAPIDIR)/src
+
+CC := g++
+
+ifeq ($(DEBUG),0)
+    CFLAGS := -O3 -Wall -fno-rtti -I$(HPPDIR) -I$(SRCDIR) -I$(smapi_HDIR) -I$(smapi_SRCDIR)
+    LFLAGS := -s
+else
+    CFLAGS := -g -Og -Wall -fno-rtti -I$(HPPDIR) -I$(SRCDIR) -I$(smapi_HDIR) -I$(smapi_SRCDIR)
+    LFLAGS :=
+endif
+
+# Link the GCC runtime statically, so the executable does not need
+# libgcc_s_dw2-1.dll and libstdc++-6.dll
+LFLAGS += -static-libgcc -static-libstdc++
+
+CDEFS := -D__NT__ -DNDEBUG -DWIN32 -DWIN32IOP_H -DHAVE_IO_H \
+         -DHAVE_TIME_H -DHAVE_UTIME_H -DHAVE_LOCALE_H
+
+EXEEND := _w32.exe
+
+ifeq ($(TERM),msys)
+    RM := rm -f
+else
+    RM := del /Q
+endif
 
 ifeq ($(ENABLE_SCRIPTS), 1)
-#	 CFLAGS += $(shell perl -e '@v=split(/\./,"$$]"); print "-D__PERL_VERSION__=".join("",@v)." -D__PERL_MAJOR__=$$v[0] -D__PERL_MINOR__=$$v[1]"; use ExtUtils::Embed; ccopts' | sed 's/-fstack-protector//' )
-	CFLAGS += $(shell perl -MExtUtils::Embed -MConfig -e '@v=split(/\./,"$$]"); print "-D__PERL_VERSION__=".join("",@v)." -D__PERL_MAJOR__=$$v[0] -D__PERL_MINOR__=$$v[1] $$Config{ccdlflags} ", join(" ",grep(!/-fstack-protector/,split(" ",$$Config{ccflags}))), " -I$$Config{archlibexp}/CORE";' )
-	LFLAGS += $(shell perl -MExtUtils::Embed -e ldopts )
+    CFLAGS += $(shell perl -MExtUtils::Embed -MConfig -e '@v=split(/\./,"$$]"); print "-D__PERL_VERSION__=".join("",@v)." -D__PERL_MAJOR__=$$v[0] -D__PERL_MINOR__=$$v[1] $$Config{ccdlflags} ", join(" ",grep(!/-fstack-protector/,split(" ",$$Config{ccflags}))), " -I$$Config{archlibexp}/CORE";' )
+    LFLAGS += $(shell perl -MExtUtils::Embed -e ldopts )
 endif
 
 ifeq ($(ENABLE_SYSLOG_LOG_FORMAT), 1)
-	CFLAGS += -DSYSLOG_LOG_FORMAT
+    CFLAGS += -DSYSLOG_LOG_FORMAT
 endif
 
 ifeq ($(ENABLE_LOG_PID), 1)
-	CFLAGS += -DLOG_SHOW_PID
+    CFLAGS += -DLOG_SHOW_PID
 endif
 
 ifdef CONFIG
-	CDEFS += -DDefaultConfig=\"$(CONFIG)\"
+    CDEFS += -DDefaultConfig=\"$(CONFIG)\"
 endif
-
-all: rntrack
 
 OBJS= \
 	age.o \
@@ -76,28 +104,20 @@ OBJS= \
 	vars.o \
 	wildmat.o
 
-%.o: $(SRCDIR)%.c
-	$(CC) $(CFLAGS) $(CDEFS) -c $<
+.PHONY: all
+all: rntrack$(EXEEND) ;
 
-%.o: $(SRCDIR)%.cpp
-	$(CC) $(CFLAGS) $(CDEFS) -c $<
+include $(SMAPIDIR)/makefile.mgw
 
-# Thunderbirds are go!
+rntrack$(EXEEND): $(smapi_OBJS) $(OBJS)
+	$(CC) -o rntrack$(EXEEND) $(smapi_OBJS) $(OBJS) $(LFLAGS)
 
-smapi:
-	make -C $(SMAPIDIR) -f makefile.mgw
+$(OBJS): %.o: $(SRCDIR)/%.cpp
+	$(CC) $(CFLAGS) $(CDEFS) -c $(SRCDIR)/$*.cpp
 
-rntrack: rntrack$(EXEEND)
-
-rntrack$(EXEEND): $(OBJS) smapi
-	$(CC) -o rntrack$(EXEEND) $(OBJS) $(LFLAGS)
-
+.PHONY: clean distclean
 clean:
-	-$(RM) $(SMAPIDIR)/*.o
-	-$(RM) $(SMAPIDIR)/*.a
 	-$(RM) *.o
-	-$(RM) *~
-	-$(RM) core
 
 distclean: clean
 	-$(RM) rntrack$(EXEEND)
