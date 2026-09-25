@@ -61,6 +61,82 @@ typedef struct
     char DateTime[20];
 } tPMSG;
 
+// ---------------------------
+// FTS-0001: toUserName, fromUserName and subject of a packed message are
+// null terminated strings of up to 36, 36 and 72 bytes including the null;
+// the null is the only field delimiter. Some broken software writes longer
+// strings. They are read up to the null and truncated.
+
+// Reads a null terminated string. If Dst is not NULL, stores at most
+// Size - 1 characters and the null there. Len gets the full length of the
+// string. Returns FALSE on a read error or EOF.
+static bool ReadPktString(FILE * fh, char * Dst, unsigned int Size,
+                          unsigned int & Len)
+{
+    int c;
+
+    Len = 0;
+
+    while((c = fgetc(fh)) != EOF)
+    {
+        if(c == '\0')
+        {
+            if(Dst != NULL)
+            {
+                Dst[(Len < Size) ? Len : Size - 1] = '\0';
+            }
+
+            return TRUE;
+        }
+
+        if(Dst != NULL && Len < Size - 1)
+        {
+            Dst[Len] = (char)c;
+        }
+
+        Len++;
+    }
+
+    return FALSE;
+} // ReadPktString
+
+// ---------------------------
+
+// Reads toUserName, fromUserName and subject of the current packed message
+// to To, From and Subj (each may be NULL). Too long strings are truncated
+// with a warning if Verbose. Returns FALSE on a read error.
+bool PKTBASE::ReadMsgStrings(char * To, char * From, char * Subj,
+                             bool Verbose)
+{
+    const char * Names[3] = {"ToName", "FromName", "Subject"};
+    unsigned int Sizes[3] = {36, 36, 72};
+    char * Dst[3] = {To, From, Subj};
+    unsigned int Len;
+    int i;
+
+    for(i = 0; i < 3; i++)
+    {
+        if(!ReadPktString(fh, Dst[i], Sizes[i], Len))
+        {
+            Log.Level(LOGE) << "   Error: Unable to read message header (" <<
+                            Names[i] << ") from PKT '" << PktName << "'" << EOL;
+            return FALSE;
+        }
+
+        if(Len >= Sizes[i] && Verbose)
+        {
+            Log.Level(LOGW) << "   Warning: " << Names[i] << " of message " <<
+                            MessageName() << " is too long (" << Len <<
+                            " characters, " << Sizes[i] - 1 <<
+                            " allowed), truncated to '" <<
+                            ((Dst[i] != NULL) ? Dst[i] : "") << "'." << EOL;
+        }
+    }
+    return TRUE;
+} // ReadMsgStrings
+
+// ---------------------------
+
 PKTBASE::PKTBASE()
 {
     DirName = NULL;
@@ -159,11 +235,12 @@ bool PKTBASE::CopyTail(FILE * tf)
 
 bool PKTBASE::CopyOneMessage(FILE * tf)
 {
-    char * Buff;
-    int I, i;
-
-    Buff = (char *)malloc(sizeof(tPMSG) + 256);
-    CheckMem(Buff);
+    char Buff[sizeof(tPMSG)];
+    char Block[10240];
+    long Start, End;
+    unsigned int Len;
+    size_t n;
+    int I;
 
     if(LogLevel >= 5)
     {
@@ -175,7 +252,6 @@ bool PKTBASE::CopyOneMessage(FILE * tf)
 
     if(fread(&I, 2, 1, fh) != 1)
     {
-        free(Buff);
         Log.Level(LOGE) <<
                         "   Error: Unable to read packed message header." << EOL;
         return FALSE;
@@ -187,80 +263,71 @@ bool PKTBASE::CopyOneMessage(FILE * tf)
     {
         Log.Level(LOGE) <<
                         "   Error: Missing 0200 at the beginning of the message." << EOL;
-        free(Buff);
         return FALSE;
     }
 
     if(!ReadHeader(fh, Buff))
     {
-        free(Buff);
         Log.Level(LOGE) <<
                         "   Error: Unable to read packed message header." << EOL;
         return FALSE;
     }
 
-    I = sizeof(tPMSG);
+    // The rest of the message is copied as is. Use the same parsing as
+    // ReadMsg() to find its end.
+    Start = ftell(fh);
 
-    for(i = 0; i < 3; i++)
+    if(!ReadMsgStrings(NULL, NULL, NULL, FALSE))
     {
-        do
-        {
-            if(fread(Buff + I, 1, 1, fh) != 1)
-            {
-                return FALSE;
-            }
-
-            I++;
-        }
-        while(Buff[I - 1] != '\0');
+        return FALSE;
     }
 
-    do
+    if(!ReadPktString(fh, NULL, 1, Len))
     {
-        Buff = (char *)realloc(Buff, I + READBLOCKLEN + 2);
-        CheckMem(Buff);
-        memset(Buff + I, 0, READBLOCKLEN + 1);
-
-        for(i = 0; i < READBLOCKLEN; i++)
-        {
-            if(fread(Buff + I, 1, 1, fh) != 1)
-            {
-                Log.Level(LOGE) << "   Error reading body of the message." <<
-                                EOL;
-                free(Buff);
-                return FALSE;
-            }
-
-            I++;
-
-            if(Buff[I - 1] == '\0')
-            {
-                break;
-            }
-        }
+        Log.Level(LOGE) << "   Error reading body of the message." << EOL;
+        return FALSE;
     }
-    while(Buff[I - 1] != '\0');
+
+    End = ftell(fh);
 
     if(tf != NULL)
     {
-        i = 2;
+        I = 2;
 
-        if(fwrite(&i, 2, 1, tf) != 1)
+        if(fwrite(&I, 2, 1, tf) != 1)
         {
             Log.Level(LOGE) << "   Error writing copy of the signature." << EOL;
-            free(Buff);
             return FALSE;
         }
 
-        if(fwrite(Buff, I, 1, tf) != 1)
+        // The header is written as ReadHeader() fixed it
+        if(fwrite(Buff, sizeof(tPMSG), 1, tf) != 1 ||
+                fseek(fh, Start, SEEK_SET) != 0)
         {
             Log.Level(LOGE) << "   Error writing copy of the message." << EOL;
-            free(Buff);
             return FALSE;
+        }
+
+        while(Start < End)
+        {
+            n = (size_t)(End - Start);
+
+            if(n > sizeof(Block))
+            {
+                n = sizeof(Block);
+            }
+
+            if(fread(Block, n, 1, fh) != 1 || fwrite(Block, n, 1, tf) != 1)
+            {
+                Log.Level(LOGE) << "   Error writing copy of the message." <<
+                                EOL;
+                return FALSE;
+            }
+
+            Start += (long)n;
         }
     }
 
-    free(Buff);
     return TRUE;
 } // CopyOneMessage
 
@@ -985,6 +1052,8 @@ bool PKTBASE::Renumber(void)
 
 bool PKTBASE::DeleteMsg(void)
 {
+    // A message which failed to be read may be not in the mask yet
+    AddToMask(MsgNum);
     MsgMask[MsgNum] = 0;
     return TRUE;
 }
@@ -1112,54 +1181,9 @@ bool PKTBASE::ReadMsg(cMSG & m)
     SetMsgAttr(p.Attr, m);
     CHP = 642;
 
-    for(i = 0; i < 36; i++)
+    if(!ReadMsgStrings(m._ToName, m._FromName, m._Subject, TRUE))
     {
-        if(fread(m._ToName + i, 1, 1, fh) != 1)
-        {
-            Log.Level(LOGE) <<
-                            "   Error: Unable to read message header (ToName) from PKT '" <<
-                            PktName << "'" << EOL;
-            return FALSE;
-        }
-
-        if(m._ToName[i] == '\0')
-        {
-            break;
-        }
-    }
-    CHP = 643;
-
-    for(i = 0; i < 36; i++)
-    {
-        if(fread(m._FromName + i, 1, 1, fh) != 1)
-        {
-            Log.Level(LOGE) <<
-                            "   Error: Unable to read message header (FromName) from PKT '" <<
-                            PktName << "'" << EOL;
-            return FALSE;
-        }
-
-        if(m._FromName[i] == '\0')
-        {
-            break;
-        }
-    }
-    CHP = 644;
-
-    for(i = 0; i < 72; i++)
-    {
-        if(fread(m._Subject + i, 1, 1, fh) != 1)
-        {
-            Log.Level(LOGE) <<
-                            "   Error: Unable to read message header (Subject) from PKT '" <<
-                            PktName << "'" << EOL;
-            return FALSE;
-        }
-
-        if(m._Subject[i] == '\0')
-        {
-            break;
-        }
+        return FALSE;
     }
 
     CHP  = 645;

@@ -1126,13 +1126,46 @@ PKTrc PKT::Poll(PKTMode mod)
 // --------------------------------------------------------------------
 
 
-int UnpackOneMsg(char * & tmt)
+// Copies a null terminated string of a packed message (toUserName{36},
+// fromUserName{36} or subject{72} in FTS-0001) from Src to Dst of Size
+// bytes. A longer string written by broken software is truncated.
+// Returns a pointer past the null, or NULL if there is no null before End.
+static char * GetPktString(char * Src, char * End, char * Dst,
+                           unsigned int Size, const char * Name)
+{
+    char * s;
+
+    for(s = Src; s < End && *s != '\0'; s++)
+    {}
+
+    if(s >= End)
+    {
+        Log.Level(LOGE) << "   Error: Destroyed packet (" << Name <<
+                        " of a packed message is not terminated)." << EOL;
+        return NULL;
+    }
+
+    CopyMsgField(Dst, Size, Src, s - Src, Name, NULL);
+    return s + 1;
+} // GetPktString
+
+// End points past the end of the packet data
+int UnpackOneMsg(char * & tmt, char * End)
 {
     cMSG m;
     tPMSG * p;
     int LoOpened;
+    char Date[21];
+    char * Text;
 
     m.Clear();
+
+    if(End - tmt < (long)sizeof(tPMSG))
+    {
+        Log.Level(LOGE) << "   Error: Destroyed packet." << EOL;
+        return FALSE;
+    }
+
     p    = (tPMSG *)tmt;
     tmt += sizeof(tPMSG);
 
@@ -1147,22 +1180,29 @@ int UnpackOneMsg(char * & tmt)
     m._FromAddr.Net(p->FromNet);
     m._ToAddr.Net(p->ToNet);
     m._Cost = p->Cost;
-    m._Time = ToTime(p->DateTime);
+    memcpy(Date, p->DateTime, 20);
+    Date[20] = '\0';
+    m._Time = ToTime(Date);
     SetMsgAttr(p->Attr, m);
-    RSTRLCPY(m._ToName, tmt, 36);
 
-    while(*tmt++ != '\0')
+    if((tmt = GetPktString(tmt, End, m._ToName, 36, "ToName")) == NULL ||
+            (tmt = GetPktString(tmt, End, m._FromName, 36,
+                                "FromName")) == NULL ||
+            (tmt = GetPktString(tmt, End, m._Subject, 72, "Subject")) == NULL)
+    {
+        return FALSE;
+    }
+
+    for(Text = tmt; tmt < End && *tmt != '\0'; tmt++)
     {}
-    RSTRLCPY(m._FromName, tmt, 36);
 
-    while(*tmt++ != '\0')
-    {}
-    RSTRLCPY(m._Subject, tmt, 72);
+    if(tmt >= End)
+    {
+        Log.Level(LOGE) << "   Error: Destroyed packet." << EOL;
+        return FALSE;
+    }
 
-    while(*tmt++ != '\0')
-    {}
-
-    m.ParseMem(tmt);
+    m.ParseMem(Text);
     m.DelLastOurVia();
 
     if(!TempMail->WriteNewMsg(m))
@@ -1194,10 +1234,6 @@ int UnpackOneMsg(char * & tmt)
         }
     }
 
-    while(*tmt != '\0')
-    {
-        tmt++;
-    }
     tmt++;
     return TRUE;
 } // UnpackOneMsg
@@ -1262,14 +1298,24 @@ int DoRepackFile(char * Name)
     fclose(fh);
     tmt += sizeof(tPKTH);
 
-    while(*tmt == '\2')
+    while(tmt < tmt2 + PktSize && *tmt == '\2')
     {
-        if(!UnpackOneMsg(tmt))
+        if(!UnpackOneMsg(tmt, tmt2 + PktSize))
         {
             free(tmt2);
             return TRUE;
         }
     }
+
+    // After the last message the packet ends with nulls. Anything else means
+    // the message structure is broken (e.g. a string lost its null).
+    if(tmt < tmt2 + PktSize && *tmt != '\0')
+    {
+        Log.Level(LOGE) << "   Error: Destroyed packet." << EOL;
+        free(tmt2);
+        return TRUE;
+    }
+
     unlink(Name);
     free(tmt2);
     return TRUE;

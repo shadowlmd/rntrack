@@ -49,6 +49,7 @@ class PKTBASE : public MSGBASE
     bool CopyMessages(FILE * tf);
     bool CopyOneMessage(FILE * tf);
     bool ReadHeader(FILE * tf, char * Buff);
+    bool ReadMsgStrings(char * To, char * From, char * Subj, bool Verbose);
 
 public:
     bool WriteOneMsg(unsigned int Num, cMSG & m);
