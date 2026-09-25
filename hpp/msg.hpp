@@ -73,6 +73,12 @@ public:
 //  friend void Kludges::Add(char * Txt);
 };
 
+// ^AFLAGS flags which a message base may store natively in the message
+// header. Such flags are excluded from ^AFLAGS when writing to that base.
+#define NATIVE_DIR 0x0001
+#define NATIVE_IMM 0x0002
+#define NATIVE_LOK 0x0004
+
 class cMSG
 {
 public:
@@ -143,7 +149,7 @@ public:
     void Print(void);
     void ParseMem(char * Buff);
     char * FlagsToStr(char * str);
-    char * SomeFlagsToStr(char * str);
+    char * SomeFlagsToStr(char * str, unsigned int Native = 0);
     void Normalise(void);
     unsigned int Lines(void);
     unsigned int Bytes(void);

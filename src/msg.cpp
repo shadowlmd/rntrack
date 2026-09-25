@@ -541,7 +541,8 @@ void cMSG::Clear(void)
                  fLocal      = fHold    = fFileRequest = fRRQ      =
                  fIRR        = fARQ     = fFURQ        = fDIR      =
                  fIMM        = fCFM     = fTFS         = fKFS      =
-                 fEchomail   = fScanned = fLok         = fAS       = 0;
+                 fEchomail   = fScanned = fLok         = fAS       =
+                 fNotUsed    = 0;
     CHP = 315026;
     _Klu.Clear();
     CHP = 315028;
@@ -1362,16 +1363,16 @@ char * cMSG::FlagsToStr(char * Str)
 
 // ---------------------------
 
-char * cMSG::SomeFlagsToStr(char * Str)
+char * cMSG::SomeFlagsToStr(char * Str, unsigned int Native)
 {
     Str[0] = '\0';
 
-    if(fDIR)
+    if(fDIR && !(Native & NATIVE_DIR))
     {
         strcat(Str, "DIR ");
     }
 
-    if(fIMM)
+    if(fIMM && !(Native & NATIVE_IMM))
     {
         strcat(Str, "IMM ");
     }
@@ -1391,7 +1392,7 @@ char * cMSG::SomeFlagsToStr(char * Str)
         strcat(Str, "KFS ");
     }
 
-    if(fLok)
+    if(fLok && !(Native & NATIVE_LOK))
     {
         strcat(Str, "LOK ");
     }
@@ -1665,6 +1666,7 @@ cMSG & cMSG::operator =(const cMSG & m)
     fKillSent    = m.fKillSent;
     fLocal       = m.fLocal;
     fHold        = m.fHold;
+    fNotUsed     = m.fNotUsed;
     fFileRequest = m.fFileRequest;
     fRRQ     = m.fRRQ;
     fIRR     = m.fIRR;

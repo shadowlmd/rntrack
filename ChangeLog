@@ -4,6 +4,16 @@
 ! - Bug fixed
 # - Added feature or changes
 
+X.X.X YYYY-MM-DD (tag "vX.X.X")
+-------------------------------
+! fix Dir flag set spuriously on rewritten messages (native Direct attribute
+  in JAM, bit 0x0400 in *.MSG, Squish and packets); the bug appeared in 2.0.55
+# JAM: use the native Direct and Immediate attributes instead of
+  ^AFLAGS DIR and IMM. The +d and +m masks now match the native attributes
+  set by other programs (e.g. GoldED); ^AFLAGS DIR and IMM written by previous
+  versions are converted to the native attributes when a message is rewritten
+# JAM, Squish: do not duplicate the native Locked attribute as ^AFLAGS LOK
+
 2.3.1 2026-04-25 (tag "v2.3.1")
 -------------------------------
 # Michael Dukelsky (https://github.com/dukelsky/rntrack/) doesn't support RNTrack anymore. I moved all his patches to my (https://github.com/vasilyevmax/rntrack/) fork.

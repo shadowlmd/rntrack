@@ -64,7 +64,6 @@ char * GetFilePath(char * Path, char * Name);
 char * GetFileName(char * FName, char * Name);
 void nls_strupr(char * s);
 const char * dirslashbug(const char * dirname);
-unsigned short & FirstWord(const unsigned int & Dword);
 
 int fsCompareName(const char * Name, const char * Mask);
 

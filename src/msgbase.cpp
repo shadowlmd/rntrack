@@ -296,9 +296,12 @@ void AddKluToChain(char * & cl, const char * Kn, const char * Kb)
     free(buff);
 } // AddKluToChain
 
-void PrepKluChain(char * & Ctrl, cMSG & m, bool IsKludge)
+// Native is a set of NATIVE_* flags stored in the message header by the
+// target message base; they are excluded from ^AFLAGS.
+void PrepKluChain(char * & Ctrl, cMSG & m, bool IsKludge, unsigned int Native)
 {
     IndBiList<Kludge>::ElemPtr Klu;
+    char Flags[500];
 
     CHP = 201;
     Klu = m._Klu.GetFirst();
@@ -319,6 +322,14 @@ void PrepKluChain(char * & Ctrl, cMSG & m, bool IsKludge)
                 if(IsKludge != TRUE)
                 {
                     AddKluToChain(Ctrl, Klu->Name(), Klu->Body());
+                }
+            }
+            else if(Native != 0 && stricmp(Klu->Name(), "\1FLAGS") == 0)
+            {
+                if(IsKludge == TRUE &&
+                        strlen(m.SomeFlagsToStr(Flags, Native)) != 0)
+                {
+                    AddKluToChain(Ctrl, Klu->Name(), Flags);
                 }
             }
             else
