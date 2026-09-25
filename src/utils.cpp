@@ -454,21 +454,6 @@ const char * dirslashbug(const char * dirname)
     return newname;
 }
 
-/** @brief get the first WORD (unsigned short) of a DWORD (unsigned int)
- *  @param[in] Dword
- *  @return the first WORD
- */
-unsigned short & FirstWord(const unsigned int & Dword)
-{
-    struct SplitDWORD
-    {
-        unsigned short first;
-        unsigned short second;
-    };
-    SplitDWORD * p = (SplitDWORD *)&Dword;
-    return p->first;
-}
-
 int fsCompareName(const char * Name, const char * Mask)
 {
 #ifdef __unix__

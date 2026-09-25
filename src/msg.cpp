@@ -1363,16 +1363,16 @@ char * cMSG::FlagsToStr(char * Str)
 
 // ---------------------------
 
-char * cMSG::SomeFlagsToStr(char * Str)
+char * cMSG::SomeFlagsToStr(char * Str, unsigned int Native)
 {
     Str[0] = '\0';
 
-    if(fDIR)
+    if(fDIR && !(Native & NATIVE_DIR))
     {
         strcat(Str, "DIR ");
     }
 
-    if(fIMM)
+    if(fIMM && !(Native & NATIVE_IMM))
     {
         strcat(Str, "IMM ");
     }
@@ -1392,7 +1392,7 @@ char * cMSG::SomeFlagsToStr(char * Str)
         strcat(Str, "KFS ");
     }
 
-    if(fLok)
+    if(fLok && !(Native & NATIVE_LOK))
     {
         strcat(Str, "LOK ");
     }

@@ -34,6 +34,8 @@ class SQUISH : public MSGBASE
     unsigned int MaxNum;
     bool PrevIsDel;
     char bType;
+    // NATIVE_* flags stored in the message header instead of ^AFLAGS
+    unsigned int NativeFlags(void);
 // private:
 public:
     bool WriteOneMsg(unsigned int Num, cMSG & m);

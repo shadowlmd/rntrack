@@ -500,7 +500,25 @@ bool SQUISH::ReadMsg(cMSG & m)
 
     Log.Level(LOGD) << "MSGAPI::ReadMsg FromAddr == " << m._FromAddr << EOL;
     Log.Level(LOGD) << "MSGAPI::ReadMsg ToAddr   == " << m._ToAddr << EOL;
-    SetMsgAttr(FirstWord((const unsigned int &)rm.attr), m);
+    unsigned short attr = (unsigned short)(rm.attr & 0xffff);
+
+    if(bType == '@')
+    {
+        // JAM: smapi maps the native Direct and Immediate attributes
+        // to MSGXX2 and MSGIMM
+        if(attr & MSGXX2)
+        {
+            m.fDIR = 1;
+            attr  &= ~MSGXX2;
+        }
+
+        if(rm.attr & MSGIMM)
+        {
+            m.fIMM = 1;
+        }
+    }
+
+    SetMsgAttr(attr, m);
 
     if(rm.attr & MSGSCANNED)
     {
@@ -592,6 +610,22 @@ bool SQUISH::WriteOneMsg(unsigned int Num, cMSG & m)
     SetMsgAttr(m, (unsigned short &)attr);
     rm.attr = (unsigned long)attr;
 
+    if(bType == '@')
+    {
+        // JAM: MSGXX2 is the native Direct attribute, not the unused one
+        rm.attr &= ~MSGXX2;
+
+        if(m.fDIR)
+        {
+            rm.attr |= MSGXX2;
+        }
+
+        if(m.fIMM)
+        {
+            rm.attr |= MSGIMM;
+        }
+    }
+
     if(m.fScanned)
     {
         rm.attr |= MSGSCANNED;
@@ -608,7 +642,7 @@ bool SQUISH::WriteOneMsg(unsigned int Num, cMSG & m)
     Ctrl = NULL;
     CHP  = 562;
     m.Normalise();
-    PrepKluChain(Ctrl, m, TRUE);
+    PrepKluChain(Ctrl, m, TRUE, NativeFlags());
     CHP = 563;
     tmt = tmt2 = Ctrl;
 
@@ -716,6 +750,18 @@ bool SQUISH::WriteOneMsg(unsigned int Num, cMSG & m)
     CHP = 585;
     return TRUE;
 } // WriteOneMsg
+
+// ---------------------------
+
+unsigned int SQUISH::NativeFlags(void)
+{
+    if(bType == '@')
+    {
+        return NATIVE_DIR | NATIVE_IMM | NATIVE_LOK;
+    }
+
+    return NATIVE_LOK;
+}
 
 // ---------------------------
 

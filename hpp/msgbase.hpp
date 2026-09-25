@@ -116,7 +116,8 @@ MSGBASE * MakeBase(char * BName);
 void SetMsgAttr(cMSG & m, unsigned short int & Attr);
 void SetMsgAttr(unsigned short int & Attr, cMSG & m);
 bool WriteMsgBody(cMSG & m, FILE * fh);
-void PrepKluChain(char * & cl, cMSG & m, bool IsKludge);
+void PrepKluChain(char * & cl, cMSG & m, bool IsKludge,
+                  unsigned int Native = 0);
 void AddKluToChain(char * & cl, const char * Kn, const char * Kb);
 
 #endif
