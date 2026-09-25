@@ -13,6 +13,21 @@ X.X.X YYYY-MM-DD (tag "vX.X.X")
   set by other programs (e.g. GoldED); ^AFLAGS DIR and IMM written by previous
   versions are converted to the native attributes when a message is rewritten
 # JAM, Squish: do not duplicate the native Locked attribute as ^AFLAGS LOK
+! PKT: toUserName, fromUserName and subject are read up to the terminating
+  null as FTS-0001 requires. Before, reading stopped after 36, 36 or 72 bytes,
+  so a too long string shifted the next fields, the message text was lost and
+  the rest of the packet was dropped. Too long strings are truncated to 35, 35
+  or 71 characters now and a warning is written to the log
+! PKT: fix heap overflow when a packet with too long strings is rebuilt after
+  deleting or moving some of its messages
+! fix unpacking outbound packets with too long strings (the neighbouring
+  field was overwritten) and cut packets (read past the end of the data);
+  a packet with garbage after the last message is reported as destroyed
+! FromName, ToName and Subject read from *.MSG and Squish bases, set by
+  Action masks, templates or Perl scripts are truncated to 35, 35 and 71
+  characters with a warning; before, they could be left without the
+  terminating null or overflow a buffer by one byte
+! fix memory leaks in smapi when JAM messages are rewritten or deleted
 
 2.3.1 2026-04-25 (tag "v2.3.1")
 -------------------------------
