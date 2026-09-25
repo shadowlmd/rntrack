@@ -467,9 +467,14 @@ bool SQUISH::ReadMsg(cMSG & m)
     CHP = 551;
     ConvertControlInfo((byte *)Ctrl, &rm.orig, &rm.dest);
     CHP = 552;
-    RSTRLCPY(m._FromName, (char *)rm.from, 36);
-    RSTRLCPY(m._ToName, (char *)rm.to, 36);
-    RSTRLCPY(m._Subject, (char *)rm.subj, 72);
+    // Squish fields may be not null terminated. smapi truncates longer
+    // JAM fields itself.
+    CopyMsgField(m._FromName, sizeof(m._FromName), (char *)rm.from,
+                 sizeof(rm.from), "FromName", MessageName());
+    CopyMsgField(m._ToName, sizeof(m._ToName), (char *)rm.to,
+                 sizeof(rm.to), "ToName", MessageName());
+    CopyMsgField(m._Subject, sizeof(m._Subject), (char *)rm.subj,
+                 sizeof(rm.subj), "Subject", MessageName());
     m._Time = dosftime(rm.date_written);
     //   m._Time = sToTime((char *)rm.__ftsc_date);
     m._FromAddr.Zone(rm.orig.zone);
@@ -591,9 +596,12 @@ bool SQUISH::WriteOneMsg(unsigned int Num, cMSG & m)
 
     CHP = 560;
     memset(&rm, 0, sizeof(XMSG));
-    RSTRLCPY((char *)rm.from, m._FromName, 36);
-    RSTRLCPY((char *)rm.to, m._ToName, 36);
-    RSTRLCPY((char *)rm.subj, m._Subject, 72);
+    CopyMsgField((char *)rm.from, sizeof(rm.from), m._FromName,
+                 sizeof(m._FromName), "FromName", NULL);
+    CopyMsgField((char *)rm.to, sizeof(rm.to), m._ToName,
+                 sizeof(m._ToName), "ToName", NULL);
+    CopyMsgField((char *)rm.subj, sizeof(rm.subj), m._Subject,
+                 sizeof(m._Subject), "Subject", NULL);
     RSTRLCPY((char *)rm.__ftsc_date, FromTime(m._Time), 20);
     CHP = 561;
     dosttime(rm.date_written, m._Time);

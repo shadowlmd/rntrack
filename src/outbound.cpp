@@ -987,6 +987,15 @@ PKTrc PKT::AddMsg(cMSG & m, PKTMode mod, int Dest)
         return PKTERROR;
     }
 
+    // FTS-0001 limits these strings by 36, 36 and 72 bytes including the
+    // null, the same sizes as the message fields have
+    CopyMsgField(m._ToName, sizeof(m._ToName), m._ToName, sizeof(m._ToName),
+                 "ToName", NULL);
+    CopyMsgField(m._FromName, sizeof(m._FromName), m._FromName,
+                 sizeof(m._FromName), "FromName", NULL);
+    CopyMsgField(m._Subject, sizeof(m._Subject), m._Subject,
+                 sizeof(m._Subject), "Subject", NULL);
+
     if(strlen(m._ToName) != 0)
     {
         if(fwrite(m._ToName, strlen(m._ToName), 1, fh) != 1)

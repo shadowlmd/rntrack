@@ -937,9 +937,12 @@ bool MSGASMSG::ReadMsg(cMSG & m)
     m._ToAddr.Node(Hdr.DestNode);
     m._ToAddr.Net(Hdr.DestNet);
 
-    strncpy(m._Subject, Hdr.Subject, 72);
-    strncpy(m._FromName, Hdr.FromName, 36);
-    strncpy(m._ToName, Hdr.ToName, 36);
+    CopyMsgField(m._Subject, sizeof(m._Subject), Hdr.Subject,
+                 sizeof(Hdr.Subject), "Subject", MessageName());
+    CopyMsgField(m._FromName, sizeof(m._FromName), Hdr.FromName,
+                 sizeof(Hdr.FromName), "FromName", MessageName());
+    CopyMsgField(m._ToName, sizeof(m._ToName), Hdr.ToName,
+                 sizeof(Hdr.ToName), "ToName", MessageName());
     m._Time      = ToTime(Hdr.DateTime);
     m._Cost      = Hdr.Cost;
     m._ReplyTo   = Hdr.ReplyTo;

@@ -160,6 +160,8 @@ public:
 };
 
 unsigned long MsgID(void);
+void CopyMsgField(char * Dst, size_t Size, const char * Src, size_t SrcMax,
+                  const char * Name, const char * Where);
 time_t ToTime(char * txt);
 char * FromTime(time_t tmt);
 
