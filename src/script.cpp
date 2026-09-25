@@ -134,7 +134,8 @@ XSdEfInE(perl_Update)
     if(tmt != NULL)
     {
         str = SvPV(*tmt, n_a);
-        RSTRLCPY(CurrMsg->_FromName, str, 36);
+        CopyMsgField(CurrMsg->_FromName, sizeof(CurrMsg->_FromName), str, n_a,
+                     "FromName", NULL);
     }
 
     tmt = hv_fetch(m, "FromAddr", 8, FALSE);
@@ -152,7 +153,8 @@ XSdEfInE(perl_Update)
     if(tmt != NULL)
     {
         str = SvPV(*tmt, n_a);
-        RSTRLCPY(CurrMsg->_ToName, str, 36);
+        CopyMsgField(CurrMsg->_ToName, sizeof(CurrMsg->_ToName), str, n_a,
+                     "ToName", NULL);
     }
 
     tmt = hv_fetch(m, "ToAddr", 6, FALSE);
@@ -170,7 +172,8 @@ XSdEfInE(perl_Update)
     if(tmt != NULL)
     {
         str = SvPV(*tmt, n_a);
-        RSTRLCPY(CurrMsg->_Subject, str, 72);
+        CopyMsgField(CurrMsg->_Subject, sizeof(CurrMsg->_Subject), str, n_a,
+                     "Subject", NULL);
     }
 
     tmt = hv_fetch(m, "Body", 4, FALSE);
@@ -404,7 +407,8 @@ XSdEfInE(perl_NewMsg)
         tmp = (char *)"";
     }
 
-    RSTRLCPY(msg->_FromName, tmp, 36);
+    CopyMsgField(msg->_FromName, sizeof(msg->_FromName), tmp, (size_t)-1,
+                 "FromName", NULL);
 
     tmp = SvPV(ST(2), n_a);
 
@@ -423,7 +427,8 @@ XSdEfInE(perl_NewMsg)
         tmp = (char *)"";
     }
 
-    RSTRLCPY(msg->_ToName, tmp, 36);
+    CopyMsgField(msg->_ToName, sizeof(msg->_ToName), tmp, (size_t)-1, "ToName",
+                 NULL);
 
     tmp = SvPV(ST(4), n_a);
 
@@ -442,7 +447,8 @@ XSdEfInE(perl_NewMsg)
         tmp = (char *)"";
     }
 
-    RSTRLCPY(msg->_Subject, tmp, 72);
+    CopyMsgField(msg->_Subject, sizeof(msg->_Subject), tmp, (size_t)-1,
+                 "Subject", NULL);
 
     // 6 - flags (not implemented yet)
     tmp = SvPV(ST(6), n_a);

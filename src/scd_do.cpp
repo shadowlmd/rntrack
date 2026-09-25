@@ -141,58 +141,62 @@ FA & MakeToAddr(cMSG & m, FA & s)
 
 void MakeToName(cMSG & m, char * s, char * t)
 {
+    const char * Name = "ToName";
+
     CHP = 4;
 
     if(s != NULL && strcmp(s, "*") == 0)
     {
-        RSTRLCPY(t, m._ToName, 36);
+        CopyMsgField(t, 36, m._ToName, (size_t)-1, Name, NULL);
         return;
     }
 
     if(s != NULL && strcmp(s, FROMMASK_CHAR) == 0)
     {
-        RSTRLCPY(t, m._FromName, 36);
+        CopyMsgField(t, 36, m._FromName, (size_t)-1, Name, NULL);
         return;
     }
 
     if(s != NULL && strcmp(s, TOMASK_CHAR) == 0)
     {
-        RSTRLCPY(t, m._ToName, 36);
+        CopyMsgField(t, 36, m._ToName, (size_t)-1, Name, NULL);
         return;
     }
 
     if(s != NULL)
     {
-        RSTRLCPY(t, s, 36);
+        CopyMsgField(t, 36, s, (size_t)-1, Name, NULL);
         return;
     }
 } // MakeToName
 
 void MakeFromName(cMSG & m, char * s, char * t)
 {
+    const char * Name = "FromName";
+
     CHP = 5;
 
     if(s != NULL && strcmp(s, "*") == 0)
     {
-        RSTRLCPY(t, m._FromName, 36);
+        CopyMsgField(t, 36, m._FromName, (size_t)-1, Name, NULL);
         return;
     }
 
     if(s != NULL && strcmp(s, FROMMASK_CHAR) == 0)
     {
-        RSTRLCPY(t, m._FromName, 36);
+        CopyMsgField(t, 36, m._FromName, (size_t)-1, Name, NULL);
         return;
     }
 
     if(s != NULL && strcmp(s, TOMASK_CHAR) == 0)
     {
-        RSTRLCPY(t, m._ToName, 36);
+        CopyMsgField(t, 36, m._ToName, (size_t)-1, Name, NULL);
         return;
     }
 
     if(s != NULL)
     {
-        RSTRLCPY(t, s, 36);
+        CopyMsgField(t, 36, s, (size_t)-1, Name, NULL);
         return;
     }
 } // MakeFromName
@@ -208,9 +212,11 @@ void PrepareMsg(cMSG & s, cMSG & d, NormalMask * _Mask)
     CHP = 6;
     MakeFromName(s, _Mask->_FromName, sf);
     MakeToName(s, _Mask->_ToName, st);
-    RSTRLCPY(d._FromName, sf, 36);
-    RSTRLCPY(d._ToName, st, 36);
-    RSTRLCPY(d._Subject, s._Subject, 72);
+    CopyMsgField(d._FromName, sizeof(d._FromName), sf, sizeof(sf), "FromName",
+                 NULL);
+    CopyMsgField(d._ToName, sizeof(d._ToName), st, sizeof(st), "ToName", NULL);
+    CopyMsgField(d._Subject, sizeof(d._Subject), s._Subject,
+                 sizeof(s._Subject), "Subject", NULL);
     tf = MakeFromAddr(s, _Mask->_FromAddr);
     tt = MakeToAddr(s, _Mask->_ToAddr);
 
@@ -280,7 +286,8 @@ void PrepareMsg(cMSG & s, cMSG & d, NormalMask * _Mask)
     if(_Mask->_Subject != NULL && strcmp(_Mask->_Subject, "*") != 0)
     {
         tmt = StrAsTpl(d, _Mask->_Subject);
-        RSTRLCPY(d._Subject, tmt, 72);
+        CopyMsgField(d._Subject, sizeof(d._Subject), tmt, (size_t)-1,
+                     "Subject", NULL);
         free(tmt);
     }
 

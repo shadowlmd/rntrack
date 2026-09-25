@@ -550,6 +550,41 @@ void cMSG::Clear(void)
 
 // ---------------------------
 
+// Copies Src to the message header field Dst (FromName, ToName or Subject)
+// of Size bytes. At most SrcMax characters of Src are used, so Src may be
+// a fixed size field without the terminating null. A string which does not
+// fit is truncated with a warning; Where (may be NULL) names the message.
+void CopyMsgField(char * Dst, size_t Size, const char * Src, size_t SrcMax,
+                  const char * Name, const char * Where)
+{
+    size_t Len;
+
+    for(Len = 0; Len < SrcMax && Src[Len] != '\0'; Len++)
+    {}
+
+    if(Len >= Size)
+    {
+        memmove(Dst, Src, Size - 1);
+        Dst[Size - 1] = '\0';
+        Log.Level(LOGW) << "   Warning: " << Name;
+
+        if(Where != NULL)
+        {
+            Log.Level(LOGW) << " of message " << Where;
+        }
+
+        Log.Level(LOGW) << " is too long (" << (unsigned int)Len <<
+                        " characters, " << (unsigned int)(Size - 1) <<
+                        " allowed), truncated to '" << Dst << "'." << EOL;
+        return;
+    }
+
+    memmove(Dst, Src, Len);
+    Dst[Len] = '\0';
+} // CopyMsgField
+
+// ---------------------------
+
 unsigned long MsgID(void)
 {
     static unsigned int LastMSGID = 0;

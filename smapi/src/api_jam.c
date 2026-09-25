@@ -1102,6 +1102,7 @@ static sword _XPENTRY JamWriteMsg(MSGH * msgh,
                     Jmd->actmsg[msgh->msgnum - 1].TrueMsg = msgh->seek_hdr;
                     Jmd->actmsg[msgh->msgnum - 1].UserCRC = jamidxNew.UserCRC;
                     memcpy(&(Jmd->actmsg[msgh->msgnum - 1].hdr), &jamhdrNew, sizeof(jamhdrNew));
+                    freejamsubfield(Jmd->actmsg[msgh->msgnum - 1].subfield);
 
                     if(Jmd->actmsg_read == 1)
                     {
@@ -1269,7 +1270,8 @@ static sword _XPENTRY JamKillMsg(MSGA * jm, dword msgnum)
     {
         dword i;
 
-        for(i = 0; i < Jmd->HdrInfo.ActiveMsgs; i++)
+        /* ActiveMsgs is already decremented, num_msg is the cache size */
+        for(i = 0; i < jm->num_msg; i++)
         {
             freejamsubfield(Jmd->actmsg[i].subfield);
         }
