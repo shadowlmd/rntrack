@@ -330,7 +330,7 @@ int SetLogFile(char * tmt)
 
     if(LogLevel != 0)
     {
-        Log.Level(LOGE) << "--- RNtrack " << ProgVersion << " started." << EOL;
+        Log.Level(LOGE) << "--- " PACKAGE_NAME " " << ProgVersion << " started." << EOL;
     }
 
     return 0;
@@ -404,7 +404,7 @@ int LoadScriptFile(char * fname)
     return 0;
 
 #else
-    yyerror("RNtrack compiled without script system support. Sorry.");
+    yyerror(PACKAGE_NAME " compiled without script system support. Sorry.");
     unused(fname);
     return -1;
 

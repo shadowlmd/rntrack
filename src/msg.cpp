@@ -1603,7 +1603,7 @@ void cMSG::AddOurVia(void)
 
     if(NewVIAType == FALSE)
     {
-        sprintf(Buff, "\1Via %s RNtrack %s ", GetMyAka(
+        sprintf(Buff, "\1Via %s " PACKAGE_NAME " %s ", GetMyAka(
                     _ToAddr).ToStr(), ProgVersion);
         strftime(Buff + strlen(Buff), 80, "%d %b %Y %H:%M:%S", localtime(&t));
 
@@ -1628,7 +1628,7 @@ void cMSG::AddOurVia(void)
             strcat(Buff, ".UTC");
         }
 
-        sprintf(Buff + strlen(Buff), " RNtrack %s", ProgVersion);
+        sprintf(Buff + strlen(Buff), " " PACKAGE_NAME " %s", ProgVersion);
     }
 
     tmt = Buff;
@@ -1651,7 +1651,8 @@ void cMSG::DelLastOurVia(void)
         {
             if(stricmp(Klu->Name(), "\1Via") == 0 &&
                     (strstr(Klu->Body(), Buff) == Klu->Body()) &&
-                    (strstr(Klu->Body(), " RNtrack ") != NULL))
+                    (strstr(Klu->Body(), " " PACKAGE_NAME " ") != NULL ||
+                     strstr(Klu->Body(), " RNtrack ") != NULL))
             {
                 if(LogLevel >= 5)
                 {

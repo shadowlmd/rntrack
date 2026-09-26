@@ -1242,7 +1242,7 @@ bool Action::Do(MSGBASE & b, cMSG & m)
             while(*tmt2 != '\0')
             {
                 tmt = stmt;
-                sprintf(tmt, "\1SPLIT: by RNtrack. Part %d of %d\r",
+                sprintf(tmt, "\1SPLIT: by " PACKAGE_NAME ". Part %d of %d\r",
                         CurPart,
                         Parts);
                 tmt += strlen(tmt);

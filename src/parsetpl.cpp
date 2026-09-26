@@ -212,7 +212,7 @@ static int AddTearline(Template * Tpl)
     if(Tearline == NULL)
     {
         CHP = 77010;
-        Tpl->AddStr("RNtrack " ProgVersion);
+        Tpl->AddStr(PACKAGE_NAME " " ProgVersion);
         CHP = 77011;
     }
     else
@@ -297,7 +297,7 @@ static int AddMsgNOrigin(Template * Tpl)
     if(i == Tpl->BodySize)
     {
         CHP = 77061;
-        Tpl->AddStr(" * Origin: Default RNtrack origin. (");
+        Tpl->AddStr(" * Origin: Default " PACKAGE_NAME " origin. (");
         Tpl->AddStr(Tpl->From->_FromAddr.ToStr());
         Tpl->AddStr(")");
         CHP = 77062;
@@ -325,7 +325,7 @@ static int AddMsgNTearline(Template * Tpl)
     if(i == Tpl->BodySize)
     {
         CHP = 77068;
-        Tpl->AddStr("--- RNtrack " ProgVersion);
+        Tpl->AddStr("--- " PACKAGE_NAME " " ProgVersion);
     }
     else
     {
