@@ -28,6 +28,9 @@ X.X.X YYYY-MM-DD (tag "vX.X.X")
   characters with a warning; before, they could be left without the
   terminating null or overflow a buffer by one byte
 ! fix memory leaks in smapi when JAM messages are rewritten or deleted
+# program renamed to RNtrack-AF, version 2.4.0. The new name is written in
+  Via kludges, the default tearline and origin, SPLIT kludges, the log and
+  the help banner; Via lines of previous versions are still recognized
 
 2.3.1 2026-04-25 (tag "v2.3.1")
 -------------------------------
