@@ -27,7 +27,7 @@ using std::flush;
 
 void Hello(void)
 {
-    cout << "RNtrack " << ProgVersion;
+    cout << PACKAGE_NAME " " << ProgVersion;
 #if defined (__PERL_VERSION__) && defined (__PERL_MAJOR__)
     cout << " (Perl " << __PERL_MAJOR__ << "." <<
          int((__PERL_VERSION__ % 1000000) / 1000) <<

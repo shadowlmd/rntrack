@@ -981,7 +981,7 @@ bool NodeLists::CompileNeed(void)
     if(tmp != NdlSign)
     {
         Log.Level(LOGE) <<
-                        "Index file from the old version of RNtrack. Recompilation is necessary."
+                        "Index file from the old version of " PACKAGE_NAME ". Recompilation is necessary."
                         <<
                         EOL;
         fclose(fh);

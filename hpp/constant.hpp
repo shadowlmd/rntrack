@@ -65,12 +65,12 @@
 #endif
 
 #ifndef PACKAGE_NAME
-    #define PACKAGE_NAME "RNTrack"
+    #define PACKAGE_NAME "RNtrack-AF"
 #endif
 #ifdef VERSION
     #undef VERSION
 #endif
-#define VERSION               "2.3.1"
+#define VERSION               "2.4.0"
 #ifdef __PERL_VERSION__
     #define Perl              "/Perl"
 #else

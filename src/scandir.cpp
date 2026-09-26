@@ -461,7 +461,7 @@ int ScanDir::Do(void)
 
         case SS_FALSE:
             _Base->Close();
-            Log.Level(LOGI) << "Leave RNtrack: by script '" <<
+            Log.Level(LOGI) << "Leave " PACKAGE_NAME ": by script '" <<
                             _ScriptBefore << "' return." << EOL;
             return TRUE;
 

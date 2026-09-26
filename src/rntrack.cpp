@@ -308,7 +308,7 @@ void DoneSystem(void)
     if(LogLevel != 0 && Log.Opened())
     {
         CHP = 99204;
-        Log.Level(LOGE) << "--- RNtrack " << ProgVersion << " stopped." << EOL;
+        Log.Level(LOGE) << "--- " PACKAGE_NAME " " << ProgVersion << " stopped." << EOL;
         Log.Close();
     }
 
